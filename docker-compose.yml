@@ -3,11 +3,11 @@ services:
   app:
     build: .
     container_name: quiz_internship
-    command: uvicorn app.main:app --host 0.0.0.0 --reload
+    command: uvicorn app.main:app --host ${APP_HOST} --reload
     env_file:
       - .env
     ports:
-      - "8000:8000"
+      - ${APP_PORTS}
     volumes:
       - ./:/app
     depends_on:
@@ -15,8 +15,9 @@ services:
       - db-redis
 
   db-postgres:
-    image: postgres
+    image: postgres:14.0
     container_name: db-postgres
+    restart: always
     env_file:
       - .env
     volumes:
@@ -28,7 +29,7 @@ services:
     env_file:
       - .env
     ports:
-      - "6380:6379"
+      - ${REDIS_PORTS}
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
