@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
-from typing import List
+from typing import List, Optional, Union
 from app.schemas.users import User, UserUpdateRequestModel, SignUpRequestModel, UserPagination
 from app.services.users import UserService
+from app.services.auth import get_current_user
+from app import models
 
 router = APIRouter(
     prefix='/users',
@@ -10,13 +12,21 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[User])
-def get_users(pagination: UserPagination = Depends(), service: UserService = Depends()):
-    return service.get_users(pagination)
+def get_users(
+        pagination: UserPagination = Depends(),
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+):
+    return service.get_users(user_id=user.id, pagination=pagination)
 
 
 @router.get('/{id}', response_model=User)
-def get_user(id: int, service: UserService = Depends()):
-    return service.get_user(user_id=id)
+def get_user(
+        id: int,
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+):
+    return service.get_user(id=id, user_id=user.id)
 
 
 @router.post('/', response_model=User, status_code=status.HTTP_201_CREATED)
@@ -31,11 +41,25 @@ def create_user(
 def update_user(
         id: int,
         user_data: UserUpdateRequestModel,
-        service: UserService = Depends()
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
 ):
-    return service.update_user(user_id=id, user_data=user_data)
+    return service.update_user(id=id, user_data=user_data, user_id=user.id)
+
+
+@router.patch('/{id}', response_model=User)
+def update_field_user(
+        id: int,
+        user_data: UserUpdateRequestModel,
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+):
+    return service.update_user(id=id, user_data=user_data, user_id=user.id)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(id: int, service: UserService = Depends()):
-    return service.delete_user(user_id=id)
+def delete_user(
+        id: int, service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+):
+    return service.delete_user(id=id, user_id=user.id)
