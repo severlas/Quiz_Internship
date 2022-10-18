@@ -19,7 +19,9 @@ POSTGRES_DB='postgres name'
 
 REDIS_PORT='redis port'
 ```
-6. Run the app `uvicorn app.main:app` or with auto-reload `uvicorn app.main:app --reload`
+6. For make migrations run command `alembic revision --autogenarate -m "{name migrations}"`
+7. For create tables in database run command `alembic upgrade head`
+8. Run the app `uvicorn app.main:app` or with auto-reload `uvicorn app.main:app --reload`
 
 ## Set up PostgreSQL
 
