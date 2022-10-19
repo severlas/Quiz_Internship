@@ -12,54 +12,54 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[User])
-def get_users(
+async def get_users(
         pagination: UserPagination = Depends(),
         service: UserService = Depends(),
         user: models.User = Depends(get_current_user)
-):
-    return service.get_users(user_id=user.id, pagination=pagination)
+) -> List[models.User]:
+    return await service.get_users(user_id=user.id, pagination=pagination)
 
 
 @router.get('/{id}', response_model=User)
-def get_user(
+async def get_user(
         id: int,
         service: UserService = Depends(),
         user: models.User = Depends(get_current_user)
-):
-    return service.get_user(id=id, user_id=user.id)
+) -> models.User:
+    return await service.get_user(id=id, user_id=user.id)
 
 
 @router.post('/', response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(
+async def create_user(
         user_data: SignUpRequestModel,
         service: UserService = Depends()
-):
-    return service.create_user(user_data=user_data)
+) -> models.User:
+    return await service.create_user(user_data=user_data)
 
 
 @router.put('/{id}', response_model=User)
-def update_user(
+async def update_user(
         id: int,
         user_data: UserUpdateRequestModel,
         service: UserService = Depends(),
         user: models.User = Depends(get_current_user)
-):
-    return service.update_user(id=id, user_data=user_data, user_id=user.id)
+) -> models.User:
+    return await service.update_user(id=id, user_data=user_data, user_id=user.id)
 
 
 @router.patch('/{id}', response_model=User)
-def update_field_user(
+async def update_field_user(
         id: int,
         user_data: UserUpdateRequestModel,
         service: UserService = Depends(),
         user: models.User = Depends(get_current_user)
-):
-    return service.update_user(id=id, user_data=user_data, user_id=user.id)
+) -> models.User:
+    return await service.update_user(id=id, user_data=user_data, user_id=user.id)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
+async def delete_user(
         id: int, service: UserService = Depends(),
         user: models.User = Depends(get_current_user)
 ):
-    return service.delete_user(id=id, user_id=user.id)
+    return await service.delete_user(id=id, user_id=user.id)

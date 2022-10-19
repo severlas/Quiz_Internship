@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from app.services.auth import AuthService
-from app.schemas.users import SignInRequestModel
+from app.schemas.users import SignInRequestModel, TokenJWT
+
 
 router = APIRouter(
     prefix='/auth',
@@ -10,8 +11,8 @@ router = APIRouter(
 
 
 @router.post('/sign-in')
-def sign_in(
+async def sign_in(
         user_data: SignInRequestModel = Depends(),
         service: AuthService = Depends()
-):
-    return service.sign_in(user_data)
+) -> TokenJWT:
+    return await service.sign_in(user_data=user_data)

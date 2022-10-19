@@ -1,6 +1,8 @@
 from fastapi import Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBearer
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from log.config_log import logger
@@ -16,10 +18,11 @@ auth0_scheme = HTTPBearer()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/sign-in')
 
 
-def get_current_user(
+async def get_current_user(
         token: str = Depends(oauth2_scheme),
         token_auth: str = Depends(auth0_scheme),
-        db: Session = Depends(get_postgres_db)
+        db: AsyncSession = Depends(get_postgres_db),
+        service: UserService = Depends()
 ) -> models.User:
 
     payload = VerifyToken(token_auth.credentials).verify()
@@ -27,17 +30,20 @@ def get_current_user(
 
     if user_email is None:
         user_data = AuthService.verify_token(token=token)
-        user = db.query(models.User).filter_by(id=user_data.id).first()
+        user = await db.execute(select(models.User).filter_by(id=user_data.id))
+        user = user.scalar()
         return user
 
-    user = db.query(models.User).filter(models.User.email == user_email).first()
+    user = await db.execute(select(models.User).filter_by(email=user_email))
+    user = user.scalar()
+
     if not user:
         user_data = SignUpRequestModel(
             email=user_email,
             username=user_email[:user_email.index('@')],
             password=f'{user_email}{datetime.now()}'
         )
-        UserService.create_user(user_data=user_data)
+        user = await service.create_user(user_data=user_data)
     return user
 
 
@@ -87,12 +93,13 @@ class AuthService:
 
         return UserJWT(id=id, email=user_data.get('email'))
 
-    def __init__(self, db: Session = Depends(get_postgres_db)):
+    def __init__(self, db: AsyncSession = Depends(get_postgres_db)):
         self.db = db
 
     """Authenticate user by email and password"""
-    def sign_in(self, user_data: SignInRequestModel) -> TokenJWT:
-        user = self.db.query(models.User).filter(models.User.email == user_data.username).first()
+    async def sign_in(self, user_data: SignInRequestModel) -> TokenJWT:
+        user = await self.db.execute(select(models.User).filter_by(email=user_data.username))
+        user = user.scalar()
 
         if not user or not HashPasswordHelper.verify_password(user_data.password, user.password):
             logger.error('Could not validate credentials')
