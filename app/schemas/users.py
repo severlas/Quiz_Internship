@@ -1,5 +1,4 @@
-from pydantic import BaseModel
-from pydantic.networks import EmailStr
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 
@@ -7,12 +6,12 @@ class BaseUser(BaseModel):
     email: EmailStr
 
 
-class SignUnRequestModel(BaseUser):
+class SignUpRequestModel(BaseUser):
     username: str
     password: str
 
 
-class SignUpRequestModel(BaseUser):
+class SignInRequestModel(BaseUser):
     password: str
 
 
@@ -30,3 +29,20 @@ class User(UserUpdateRequestModel):
 
     class Config:
         orm_mode = True
+        
+
+class UserPagination(BaseModel):
+    limit: int = 5
+    skip: int = 0
+
+
+class UserJWT(BaseUser):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class TokenJWT(BaseModel):
+    access_token: str
+    token_type: str = 'bearer'

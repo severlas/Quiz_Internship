@@ -8,6 +8,7 @@
 4. Create file `.env`
 5. Add variable in file `.env`:
 ```
+
 DATABASE_HOSTNAME='database host'
 DATABASE_PASSWORD='postgres password'
 DATABASE_NAME='postgres name'
@@ -18,6 +19,13 @@ POSTGRES_PASSWORD='postgres password'
 POSTGRES_DB='postgres name'
 
 REDIS_PORT='redis port'
+REDIS_PORTS='redis port for docker'
+REDIS_HOST='redis host'
+
+JWT_SECRET='JWT secret key'
+JWT_ALGORITHM='JWT algorithm'
+JWT_EXPIRATION='time expiration JWT'
+
 ```
 6. For make migrations run command `alembic revision --autogenarate -m "{name migrations}"`
 7. For create tables in database run command `alembic upgrade head`
@@ -37,4 +45,6 @@ REDIS_PORT='redis port'
  
 1. [Read documentation about set up docker](https://docs.docker.com/get-docker/)
 2. Install docker
-3. Run the command `docker-compose up`
+3. Run the command `docker-compose up --build`
+4. For make migrations run command `docker-compose exec app alembic revision --autogenarate -m "{name migrations}"`
+5. For create tables in database run command `docker-compose exec app alembic upgrade head`
