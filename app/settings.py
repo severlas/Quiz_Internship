@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str
     jwt_expiration: int
 
+    domain: str
+    api_audience: str
+    issuer: str
+    algorithm: str
+
     class Config:
         env_file = ".env"
 

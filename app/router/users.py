@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
-from typing import List
+from typing import List, Optional, Union
 from app.schemas.users import User, UserUpdateRequestModel, SignUpRequestModel, UserPagination
 from app.services.users import UserService
+from app.services.auth import get_current_user
+from app import models
 
 router = APIRouter(
     prefix='/users',
@@ -10,32 +12,54 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[User])
-def get_users(pagination: UserPagination = Depends(), service: UserService = Depends()):
-    return service.get_users(pagination)
+async def get_users(
+        pagination: UserPagination = Depends(),
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+) -> List[models.User]:
+    return await service.get_users(user_id=user.id, pagination=pagination)
 
 
 @router.get('/{id}', response_model=User)
-def get_user(id: int, service: UserService = Depends()):
-    return service.get_user(user_id=id)
+async def get_user(
+        id: int,
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+) -> models.User:
+    return await service.get_user(id=id, user_id=user.id)
 
 
 @router.post('/', response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(
+async def create_user(
         user_data: SignUpRequestModel,
         service: UserService = Depends()
-):
-    return service.create_user(user_data=user_data)
+) -> models.User:
+    return await service.create_user(user_data=user_data)
 
 
 @router.put('/{id}', response_model=User)
-def update_user(
+async def update_user(
         id: int,
         user_data: UserUpdateRequestModel,
-        service: UserService = Depends()
-):
-    return service.update_user(user_id=id, user_data=user_data)
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+) -> models.User:
+    return await service.update_user(id=id, user_data=user_data, user_id=user.id)
+
+
+@router.patch('/{id}', response_model=User)
+async def update_field_user(
+        id: int,
+        user_data: UserUpdateRequestModel,
+        service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+) -> models.User:
+    return await service.update_user(id=id, user_data=user_data, user_id=user.id)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(id: int, service: UserService = Depends()):
-    return service.delete_user(user_id=id)
+async def delete_user(
+        id: int, service: UserService = Depends(),
+        user: models.User = Depends(get_current_user)
+):
+    return await service.delete_user(id=id, user_id=user.id)

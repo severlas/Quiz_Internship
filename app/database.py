@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from app.settings import settings
 from redis_om import get_redis_connection
 import databases
 
-DATABASE_URL = "postgresql://" \
+DATABASE_URL = "postgresql+asyncpg://" \
                           f"{settings.database_username}:" \
                           f"{settings.database_password}@" \
                           f"{settings.database_hostname}:" \
@@ -13,14 +14,11 @@ DATABASE_URL = "postgresql://" \
 
 database = databases.Database(DATABASE_URL)
 
-engine = create_engine(DATABASE_URL)
+engine = create_async_engine(DATABASE_URL)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(expire_on_commit=False, class_=AsyncSession, bind=engine)
 
 
-def get_postgres_db():
-    db = SessionLocal()
-    try:
+async def get_postgres_db() -> AsyncSession:
+    async with SessionLocal() as db:
         yield db
-    finally:
-        db.close()
