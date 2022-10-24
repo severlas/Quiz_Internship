@@ -4,6 +4,7 @@ from typing import Optional, Union, List
 from fastapi.param_functions import Form
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.requests import NestedRequestInUser
+from app.schemas.baseschemas import BaseMixin
 
 
 class BaseUser(BaseModel):
@@ -33,9 +34,8 @@ class NestedUser(BaseUser):
         orm_mode = True
 
 
-class User(NestedUser):
-    created_at: datetime
-    updated_at: datetime
+class User(NestedUser, BaseMixin):
+    pass
 
     class Config:
         orm_mode = True

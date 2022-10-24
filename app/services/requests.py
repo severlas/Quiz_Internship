@@ -1,4 +1,4 @@
-from fastapi import Depends, Response, status
+from fastapi import Depends, Response, status as status_code
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from typing import List, Optional
@@ -93,16 +93,17 @@ class RequestInCompanyService(BaseService):
             return request
 
     """Update request status"""
-    async def update_request(self, id: int, user_id: int, status: RequestStatus) -> models.Request:
+    async def update_request(self, id: int, user_id: int, status: RequestStatus):
         request = await self.get_request(id=id, user_id=user_id)
         company = await self._get_company_by_id(id=request.company_id)
         if await self._check_permission_for_edit_status(user_id=user_id, company=company, request_data=request):
             request.status = status
             request.updated_at = datetime.now()
             if status == 'confirmed':
-                await self._create_staff(user_id=request.user_id, company_id=request.company_id)
-                logger.info(f"Employee with id:{request.user_id} added to company with id:{request.company_id}")
-            await self.db.commit()
-            await self.db.refresh(request)
-            logger.info(f"Request with id:{id} status updated successfully! 'status': {status}")
-            return request
+                await self._create_member(user_id=request.user_id, company_id=request.company_id)
+                logger.info(f"Member with id:{request.user_id} added to company with id:{request.company_id}")
+            if status != 'created':
+                await self.db.execute(delete(models.Request).filter_by(id=id))
+                await self.db.commit()
+            logger.info(f"Request with id:{id} status updated and request deleted successfully! 'status':{status}")
+            return Response(status_code=status_code.HTTP_204_NO_CONTENT)

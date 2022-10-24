@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Response
+from fastapi import APIRouter, Depends, status as status_code, Response
 from typing import List, Optional
 from app.schemas.requests import CreateRequest, Request, RequestStatus, RequestSender
 from app.services.companies import CompanyService
@@ -39,7 +39,7 @@ async def get_request(
     return await service.get_request(id=id, user_id=user.id)
 
 
-@router.post('/', response_model=Request, status_code=status.HTTP_201_CREATED)
+@router.post('/', response_model=Request, status_code=status_code.HTTP_201_CREATED)
 async def send_request(
         request_data: CreateRequest,
         service: RequestInCompanyService = Depends(),
@@ -49,12 +49,12 @@ async def send_request(
     return await service.send_request(request_data=request_data, user_id=user.id)
 
 
-@router.put('/{id}', response_model=Request)
+@router.put('/{id}', status_code=status_code.HTTP_204_NO_CONTENT)
 async def update_request(
         id: int,
         status: RequestStatus,
         service: RequestInCompanyService = Depends(),
         user: models.User = Depends(get_current_user)
 
-) -> models.Request:
+):
     return await service.update_request(id=id, user_id=user.id, status=status)

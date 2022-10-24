@@ -7,7 +7,7 @@ from app.services.auth import get_current_user
 from app.schemas.paginations import CompanyPagination
 from app import models
 from app.router.admins import router as admins_router
-from app.router.staff import router as staff_router
+from app.router.members import router as members_router
 
 router = APIRouter(
     prefix='/companies',
@@ -61,5 +61,5 @@ async def delete_company(
     return await service.delete_company(id=id, user_id=user.id)
 
 
-router.include_router(staff_router)
+router.include_router(members_router)
 router.include_router(admins_router)

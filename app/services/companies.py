@@ -41,12 +41,12 @@ class CompanyService(BaseService):
             raise PermissionError
 
         admins = await self._get_admins_by_company_id(id)
-        staff = await self._get_staff_by_company_id(id)
+        members = await self._get_members_by_company_id(id)
         requests = await self._get_requests_by_company_id(id)
         company_data = CompanyDetail(
             **company.__dict__,
             admins=[{"id": admin_id} for admin_id in admins],
-            staff=[{"id": s_id} for s_id in staff],
+            members=[{"id": member_id} for member_id in members],
             requests=requests
         )
 
@@ -63,7 +63,7 @@ class CompanyService(BaseService):
         await self.db.refresh(company)
 
         await self._create_admin(user_id=user_id, company_id=company.id)
-        await self._create_staff(user_id=user_id, company_id=company.id)
+        await self._create_member(user_id=user_id, company_id=company.id)
         logger.info(f"Company created successfully! 'data': {company_data.dict()}")
         return company
 
@@ -100,92 +100,4 @@ class CompanyService(BaseService):
         await self.db.execute(delete(models.Company).where(models.Company.id == id))
         await self.db.commit()
         logger.info(f"Company with id:{id} deleted successfully!")
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-class CompanyAdminService(BaseService):
-    """Assign admins or delete admins"""
-
-    """Get list admins"""
-    async def get_admins(self, company_id: int, user_id: int) -> List[NestedUser]:
-        company = await self._get_company_by_id(id=company_id)
-        if company.visibility is False and user_id != company.owner_id:
-            raise NotFoundError
-
-        admins_id = await self._get_admins_by_company_id(id=company_id)
-        admins = [await self._get_user_by_id(admin_id) for admin_id in admins_id]
-        return admins
-
-    """Assign an admin from the company's staff by user id"""
-    async def create_admin(self, company_id: int, admin_id: int, user_id: int) -> CompanyAdmin:
-        company = await self._get_company_by_id(id=company_id)
-        if user_id != company.owner_id:
-            raise PermissionError(
-                log_detail=f"User with id:{user_id} wanted to assign admin with id:{admin_id} in"
-                           f"company with id:{company_id}!"
-            )
-        staff = await self._get_staff_by_company_id(id=company_id)
-        if admin_id not in staff:
-            raise NotFoundError(
-                detail=f"User with id:{admin_id} isn't included in the staff!"
-            )
-        user = await self._get_user_by_id(id=admin_id)
-        await self._create_admin(company_id=company_id, user_id=admin_id)
-        admin = CompanyAdmin(
-            company_id=company_id,
-            admin=user
-        )
-        logger.info(f"In company with id:{company_id} assigned admin with id:{admin_id}!")
-        return admin
-
-    """Delete status admin by id"""
-    async def delete_admin(self, company_id: int, admin_id: int, user_id: int):
-        company = await self._get_company_by_id(id=company_id)
-        if user_id != company.owner_id:
-            raise PermissionError(
-                log_detail=f"User with id:{user_id} wanted to delete admin with id:{admin_id} in"
-                           f"company with id:{company_id}!"
-            )
-        admins = await self._get_admins_by_company_id(id=company_id)
-        if admin_id not in admins:
-            raise NotFoundError(
-                detail=f"Admin with id:{admin_id} was not found!"
-            )
-
-        await self.db.execute(delete(models.admins).filter_by(company_id=company_id, user_id=admin_id))
-        await self.db.commit()
-        logger.info(f"In company with id:{company_id} admin with id:{admin_id} deleted successfully!")
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-class StaffInCompanyService(BaseService):
-    """Get staff or delete staff"""
-
-    """Get list staff"""
-    async def get_staff(self, company_id: int, user_id: int) -> List[NestedUser]:
-        company = await self._get_company_by_id(id=company_id)
-        if company.visibility is False and user_id != company.owner_id:
-            raise NotFoundError
-        staff_id = await self._get_staff_by_company_id(id=company_id)
-        staff = [await self._get_user_by_id(id) for id in staff_id]
-        return staff
-
-    """Delete employee by id"""
-    async def delete_employee(self, company_id: int, employee_id: int, user_id: int):
-        company = await self._get_company_by_id(id=company_id)
-
-        if user_id != company.owner_id:
-            raise PermissionError(
-                log_detail=f"User with id:{user_id} wanted to delete employee with id:{employee_id} in"
-                           f"company with id:{company_id}!"
-            )
-        staff = await self._get_staff_by_company_id(id=company_id)
-        if employee_id not in staff:
-            raise NotFoundError(
-                detail=f"Employee with id:{employee_id} was not found!"
-            )
-
-        await self.db.execute(delete(models.staff).filter_by(company_id=company_id, user_id=employee_id))
-        await self.db.commit()
-        logger.info(f"In company with id:{company_id} employee with id:{employee_id} deleted successfully!")
         return Response(status_code=status.HTTP_204_NO_CONTENT)

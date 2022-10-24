@@ -1,17 +1,8 @@
 from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
-
-
-class RequestStatus(str, Enum):
-    CREATED = 'created'
-    CONFIRMED = 'confirmed'
-    REJECTED = 'rejected'
-
-
-class RequestSender(str, Enum):
-    USER = 'user'
-    COMPANY = 'company'
+from app.services.requests_utils import RequestStatus, RequestSender
+from app.schemas.baseschemas import BaseMixin
 
 
 class BaseRequest(BaseModel):
@@ -40,14 +31,10 @@ class CreateRequest(BaseRequest):
     user_id: int
 
 
-class Request(BaseRequest):
+class Request(BaseRequest, BaseMixin):
     id: int
     company_id: int
     user_id: int
-    # user: OutUser
-    # company: Company
-    created_at: datetime
-    updated_at: datetime
 
     class Config:
         orm_mode = True

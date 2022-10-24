@@ -5,6 +5,7 @@ from fastapi.param_functions import Form
 from app import models
 from app.schemas.requests import Request, NestedRequestInCompany
 from app.schemas.users import NestedUser
+from app.schemas.baseschemas import BaseMixin
 
 
 class BaseCompany(BaseModel):
@@ -21,10 +22,8 @@ class UpdateCompany(BaseCompany):
     pass
 
 
-class Company(BaseCompany):
+class Company(BaseCompany, BaseMixin):
     id: int
-    created_at: datetime
-    updated_at: datetime
     owner_id: int
 
     class Config:
@@ -40,7 +39,7 @@ class NestedCompany(BaseCompany):
 
 class CompanyDetail(Company):
     admins: List[dict] = []
-    staff: List[dict] = []
+    members: List[dict] = []
     requests: List[NestedRequestInCompany] = []
 
     class Config:
