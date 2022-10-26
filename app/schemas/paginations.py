@@ -16,3 +16,7 @@ class CompanyPagination(BasePagination):
 
 class RequestPagination(BasePagination):
     pass
+
+
+class QuizPagination(BasePagination):
+    pass

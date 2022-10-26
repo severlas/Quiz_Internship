@@ -4,7 +4,8 @@ from app.schemas.requests import CreateRequest, Request, RequestStatus, RequestS
 from app.services.companies import CompanyService
 from app.services.requests import RequestInCompanyService
 from app.services.auth import get_current_user
-from app import models
+from app.models.requests import RequestModel
+from app.models.users import UserModel
 from app.schemas.paginations import RequestPagination
 
 
@@ -34,7 +35,7 @@ async def get_requests(
 async def get_request(
         id: int,
         service: RequestInCompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
+        user: UserModel = Depends(get_current_user)
 ) -> Request:
     return await service.get_request(id=id, user_id=user.id)
 
@@ -43,9 +44,9 @@ async def get_request(
 async def send_request(
         request_data: CreateRequest,
         service: RequestInCompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
+        user: UserModel = Depends(get_current_user)
 
-) -> models.Request:
+) -> RequestModel:
     return await service.send_request(request_data=request_data, user_id=user.id)
 
 
@@ -54,7 +55,7 @@ async def update_request(
         id: int,
         status: RequestStatus,
         service: RequestInCompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
+        user: UserModel = Depends(get_current_user)
 
 ):
     return await service.update_request(id=id, user_id=user.id, status=status)

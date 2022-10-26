@@ -5,9 +5,11 @@ from app.schemas.requests import CreateRequest, Request
 from app.services.companies import CompanyService
 from app.services.auth import get_current_user
 from app.schemas.paginations import CompanyPagination
-from app import models
+from app.models.users import UserModel
+from app.models.companies import CompanyModel
 from app.router.admins import router as admins_router
 from app.router.members import router as members_router
+from app.router.quiz import router as quiz_router
 
 router = APIRouter(
     prefix='/companies',
@@ -28,7 +30,7 @@ async def get_companies(
 async def get_company(
         id: int,
         service: CompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
+        user: UserModel = Depends(get_current_user)
 ) -> CompanyDetail:
     return await service.get_company(id=id, user_id=user.id)
 
@@ -37,8 +39,8 @@ async def get_company(
 async def create_company(
         company_data: CreateCompany,
         service: CompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
-) -> models.Company:
+        user: UserModel = Depends(get_current_user)
+) -> CompanyModel:
     return await service.create_company(company_data=company_data, user_id=user.id)
 
 
@@ -47,8 +49,8 @@ async def update_company(
         id: int,
         company_data: CreateCompany,
         service: CompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
-) -> models.Company:
+        user: UserModel = Depends(get_current_user)
+) -> CompanyModel:
     return await service.update_company(id=id, company_data=company_data, user_id=user.id)
 
 
@@ -56,10 +58,11 @@ async def update_company(
 async def delete_company(
         id: int,
         service: CompanyService = Depends(),
-        user: models.User = Depends(get_current_user)
-):
+        user: UserModel = Depends(get_current_user)
+) -> Response:
     return await service.delete_company(id=id, user_id=user.id)
 
 
 router.include_router(members_router)
 router.include_router(admins_router)
+router.include_router(quiz_router)

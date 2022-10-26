@@ -8,7 +8,7 @@ from jose import jwt, JWTError
 from log.config_log import logger
 from app.database import get_postgres_db
 from app.settings import settings
-from app import models
+from app.models.users import UserModel
 from app.schemas.users import UserJWT, TokenJWT, SignUpRequestModel, SignInRequestModel
 from app.services.hash_password_helper import HashPasswordHelper
 from app.services.verify_token import VerifyToken
@@ -24,18 +24,18 @@ async def get_current_user(
         token_auth: str = Depends(auth0_scheme),
         db: AsyncSession = Depends(get_postgres_db),
         service: UserService = Depends()
-) -> models.User:
+) -> UserModel:
 
     payload = VerifyToken(token_auth.credentials).verify()
     user_email = payload.get('email')
 
     if user_email is None:
         user_data = AuthService.verify_token(token=token)
-        user = await db.execute(select(models.User).filter_by(id=user_data.id))
+        user = await db.execute(select(UserModel).filter_by(id=user_data.id))
         user = user.scalar()
         return user
 
-    user = await db.execute(select(models.User).filter_by(email=user_email))
+    user = await db.execute(select(UserModel).filter_by(email=user_email))
     user = user.scalar()
 
     if not user:
@@ -94,7 +94,7 @@ class AuthService:
 
     """Authenticate user by email and password"""
     async def sign_in(self, user_data: SignInRequestModel) -> TokenJWT:
-        user = await self.db.execute(select(models.User).filter_by(email=user_data.username))
+        user = await self.db.execute(select(UserModel).filter_by(email=user_data.username))
         user = user.scalar()
 
         if not user or not HashPasswordHelper.verify_password(user_data.password, user.password):
