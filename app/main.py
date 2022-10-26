@@ -2,11 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import aioredis
 from app.database import database
-from app.router import users, auth
+from app.router import users, auth, companies, requests
 from app.settings import settings
 from log.config_log import logger
 
-app = FastAPI()
+app = FastAPI(
+    title='Meduzzen Quiz',
+    version='1.0.0'
+)
 
 origins = [
     "http://localhost",
@@ -42,4 +45,5 @@ async def shutdown():
 
 app.include_router(auth.router)
 app.include_router(users.router)
-
+app.include_router(companies.router)
+app.include_router(requests.router)

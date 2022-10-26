@@ -1,16 +1,18 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Union, List
 from fastapi.param_functions import Form
 from fastapi.security import OAuth2PasswordRequestForm
+from app.schemas.requests import NestedRequestInUser
+from app.schemas.baseschemas import BaseMixin
 
 
 class BaseUser(BaseModel):
     email: EmailStr
+    username: str
 
 
 class SignUpRequestModel(BaseUser):
-    username: str
     password: str
 
 
@@ -21,31 +23,31 @@ class SignInRequestModel(OAuth2PasswordRequestForm):
 class UserUpdateRequestModel(BaseModel):
     username: Union[str, None] = None
     password: Union[str, None] = None
-    is_admin: Union[bool, None] = False
-    is_staff: Union[bool, None] = False
     is_active: Union[bool, None] = True
 
 
-class User(BaseUser):
+class NestedUser(BaseUser):
     id: int
-    username: str
-    is_admin: bool = False
-    is_staff: bool = False
     is_active: bool = True
-    created_at: datetime
-    updated_at: datetime
 
     class Config:
         orm_mode = True
-        
-
-class UserPagination(BaseModel):
-    limit: int = 5
-    skip: int = 0
 
 
-class UserJWT(BaseUser):
+class User(NestedUser, BaseMixin):
+    pass
+
+    class Config:
+        orm_mode = True
+
+
+class UserDetail(User):
+    requests: List[NestedRequestInUser] = []
+
+
+class UserJWT(BaseModel):
     id: int
+    email: EmailStr
 
     class Config:
         orm_mode = True

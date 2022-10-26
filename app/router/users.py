@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from typing import List, Optional, Union
-from app.schemas.users import User, UserUpdateRequestModel, SignUpRequestModel, UserPagination
+from app.schemas.users import User, UserUpdateRequestModel, SignUpRequestModel, UserDetail
+from app.schemas.paginations import UserPagination
 from app.services.users import UserService
 from app.services.auth import get_current_user
 from app import models
@@ -15,18 +16,16 @@ router = APIRouter(
 async def get_users(
         pagination: UserPagination = Depends(),
         service: UserService = Depends(),
-        user: models.User = Depends(get_current_user)
 ) -> List[models.User]:
-    return await service.get_users(user_id=user.id, pagination=pagination)
+    return await service.get_users(pagination=pagination)
 
 
-@router.get('/{id}', response_model=User)
+@router.get('/{id}', response_model=UserDetail)
 async def get_user(
         id: int,
         service: UserService = Depends(),
-        user: models.User = Depends(get_current_user)
-) -> models.User:
-    return await service.get_user(id=id, user_id=user.id)
+) -> UserDetail:
+    return await service.get_user(id=id)
 
 
 @router.post('/', response_model=User, status_code=status.HTTP_201_CREATED)

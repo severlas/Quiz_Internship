@@ -13,6 +13,7 @@ from app.schemas.users import UserJWT, TokenJWT, SignUpRequestModel, SignInReque
 from app.services.hash_password_helper import HashPasswordHelper
 from app.services.verify_token import VerifyToken
 from app.services.users import UserService
+from app.services.exceptions import AuthenticateError
 
 auth0_scheme = HTTPBearer()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/sign-in')
@@ -48,12 +49,7 @@ async def get_current_user(
 
 
 class AuthService:
-
-    auth_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Could not validate credentials',
-        headers={'WWW-Authenticate': 'Bearer'}
-    )
+    """Authenticate service"""
 
     """Create JWT token"""
     @classmethod
@@ -86,10 +82,10 @@ class AuthService:
             id = user_data.get('id')
 
             if id is None:
-                raise cls.auth_exception
+                raise AuthenticateError
 
         except JWTError:
-            raise cls.auth_exception
+            raise AuthenticateError
 
         return UserJWT(id=id, email=user_data.get('email'))
 
@@ -102,8 +98,7 @@ class AuthService:
         user = user.scalar()
 
         if not user or not HashPasswordHelper.verify_password(user_data.password, user.password):
-            logger.error('Could not validate credentials')
-            raise self.auth_exception
+            raise AuthenticateError
 
         data_jwt = UserJWT(id=user.id, email=user.email)
         return self.create_token(data_jwt)
