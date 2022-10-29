@@ -2,7 +2,8 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from app.settings import settings
-from redis_om import get_redis_connection
+from aioredis import Redis, ConnectionPool
+from typing import AsyncIterator
 import databases
 
 DATABASE_URL = "postgresql+asyncpg://" \
@@ -22,3 +23,8 @@ SessionLocal = sessionmaker(expire_on_commit=False, class_=AsyncSession, bind=en
 async def get_postgres_db() -> AsyncSession:
     async with SessionLocal() as db:
         yield db
+
+
+async def get_redis_db() -> AsyncIterator[Redis]:
+        async with Redis.from_url(settings.redis_host, decode_responses=True) as db_redis:
+            yield db_redis

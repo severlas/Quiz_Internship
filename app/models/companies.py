@@ -3,8 +3,6 @@ from sqlalchemy.dialects import postgresql
 from app.models.basemodel import BaseModel
 from sqlalchemy.orm import declarative_base, relationship
 from app.services.requests_utils import RequestStatus, RequestSender
-from app.models.quiz import *
-from app.models.users import *
 
 admins = Table(
     "admins",
@@ -32,6 +30,8 @@ class CompanyModel(BaseModel):
 
     owner = relationship('UserModel', back_populates="company")
     quiz = relationship('QuizModel', back_populates='company')
+    quiz_results = relationship('QuizResultModel', back_populates='company')
+
     admins = relationship(
         "UserModel", secondary=admins, back_populates="companies_admins"
     )

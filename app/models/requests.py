@@ -1,9 +1,7 @@
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.dialects import postgresql
 from app.models.basemodel import BaseModel
 from app.services.requests_utils import RequestStatus, RequestSender
-from app.models.users import *
-from app.models.companies import *
 
 
 class RequestModel(BaseModel):
