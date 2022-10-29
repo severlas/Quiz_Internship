@@ -7,7 +7,7 @@ from app.schemas.companies import CreateCompany, Company, CompanyDetail, UpdateC
 from app.schemas.requests import CreateRequest, Request, RequestStatus
 from app.schemas.users import NestedUser
 from app.schemas.paginations import CompanyPagination
-from app import models
+from app.models.companies import CompanyModel
 from app.services.exceptions import PermissionError, NotFoundError
 from app.services.baseservice import BaseService
 from log.config_log import logger
@@ -24,7 +24,7 @@ class CompanyService(BaseService):
             owner_id: Optional[int] = None
     ) -> List[Company]:
         query = (
-            select(models.Company).
+            select(CompanyModel).
             limit(pagination.limit).offset(pagination.skip).
             filter_by(visibility=True)
         )
@@ -53,8 +53,8 @@ class CompanyService(BaseService):
         return company_data
 
     """Create company"""
-    async def create_company(self, user_id: int, company_data: CreateCompany) -> models.Company:
-        company = models.Company(
+    async def create_company(self, user_id: int, company_data: CreateCompany) -> CompanyModel:
+        company = CompanyModel(
             **company_data.dict(),
             owner_id=user_id,
         )
@@ -68,7 +68,7 @@ class CompanyService(BaseService):
         return company
 
     """Update company by id"""
-    async def update_company(self, id: int, user_id: int, company_data: UpdateCompany) -> models.Company:
+    async def update_company(self, id: int, user_id: int, company_data: UpdateCompany) -> CompanyModel:
         company = await self._get_company_by_id(id)
 
         if user_id != company.owner_id:
@@ -86,7 +86,7 @@ class CompanyService(BaseService):
         return company
 
     """Delete company by id"""
-    async def delete_company(self, id: int, user_id: int):
+    async def delete_company(self, id: int, user_id: int) -> Response:
         company = await self._get_company_by_id(id)
         if not company:
             raise NotFoundError(
@@ -97,7 +97,7 @@ class CompanyService(BaseService):
                 log_detail=f"User with id:{user_id} wanted to delete company with id:{id}!"
             )
 
-        await self.db.execute(delete(models.Company).where(models.Company.id == id))
+        await self.db.execute(delete(CompanyModel).where(CompanyModel.id == id))
         await self.db.commit()
         logger.info(f"Company with id:{id} deleted successfully!")
         return Response(status_code=status.HTTP_204_NO_CONTENT)

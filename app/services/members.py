@@ -3,7 +3,7 @@ from sqlalchemy import select, delete
 from typing import List
 from app.schemas.users import NestedUser
 from app.schemas.paginations import UserPagination
-from app import models
+from app.models import companies
 from app.services.exceptions import PermissionError, NotFoundError
 from app.services.baseservice import BaseService
 from log.config_log import logger
@@ -37,7 +37,7 @@ class MemberService(BaseService):
                 detail=f"Member with id:{member_id} was not found!"
             )
 
-        await self.db.execute(delete(models.members).filter_by(company_id=company_id, user_id=member_id))
+        await self.db.execute(delete(companies.members).filter_by(company_id=company_id, user_id=member_id))
         await self.db.commit()
         logger.info(f"In company with id:{company_id} member with id:{member_id} deleted successfully!")
         return Response(status_code=status.HTTP_204_NO_CONTENT)

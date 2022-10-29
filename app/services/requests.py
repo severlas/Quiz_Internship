@@ -5,7 +5,8 @@ from typing import List, Optional
 from app.database import get_postgres_db
 from app.schemas.companies import Company
 from app.schemas.requests import CreateRequest, Request, RequestStatus, RequestSender
-from app import models
+from app.models.requests import RequestModel
+from app.models.companies import CompanyModel
 from app.services.exceptions import PermissionError, NotFoundError
 from app.services.baseservice import BaseService
 from app.schemas.paginations import RequestPagination
@@ -21,7 +22,7 @@ class RequestInCompanyService(BaseService):
     async def _check_permission_for_send_request(
             cls,
             user_id: int,
-            company: models.Company,
+            company: CompanyModel,
             request_data: CreateRequest,
 
     ) -> bool:
@@ -35,7 +36,7 @@ class RequestInCompanyService(BaseService):
     async def _check_permission_for_edit_status(
             cls,
             user_id: int,
-            company: models.Company,
+            company: CompanyModel,
             request_data: CreateRequest,
 
     ) -> bool:
@@ -53,13 +54,13 @@ class RequestInCompanyService(BaseService):
             sender: Optional[RequestSender] = None,
             company_id: Optional[int] = None
     ) -> List[Request]:
-        companies = await self.db.execute(select(models.Company).filter_by(visibility=True))
+        companies = await self.db.execute(select(CompanyModel).filter_by(visibility=True))
         companies = companies.scalars().all()
 
         query = (
-            select(models.Request).
+            select(RequestModel).
             limit(pagination.limit).offset(pagination.skip).
-            filter(models.Request.company_id.in_([company.id for company in companies]))
+            filter(RequestModel.company_id.in_([company.id for company in companies]))
         )
 
         if company_id:
@@ -74,7 +75,7 @@ class RequestInCompanyService(BaseService):
         return requests
 
     """Get request by id"""
-    async def get_request(self, id: int, user_id: int) -> models.Request:
+    async def get_request(self, id: int, user_id: int) -> RequestModel:
         request = await self._get_request_by_id(id)
         company = await self._get_company_by_id(id=request.company_id)
         if not company.visibility and user_id != request.user_id and user_id != company.owner_id:
@@ -82,10 +83,10 @@ class RequestInCompanyService(BaseService):
         return request
 
     """Send a request to join the company"""
-    async def send_request(self, user_id: int, request_data: CreateRequest) -> models.Request:
+    async def send_request(self, user_id: int, request_data: CreateRequest) -> RequestModel:
         company = await self._get_company_by_id(id=request_data.company_id)
         if await self._check_permission_for_send_request(user_id=user_id, company=company, request_data=request_data):
-            request = models.Request(**request_data.dict())
+            request = RequestModel(**request_data.dict())
             self.db.add(request)
             await self.db.commit()
             await self.db.refresh(request)
@@ -93,7 +94,7 @@ class RequestInCompanyService(BaseService):
             return request
 
     """Update request status"""
-    async def update_request(self, id: int, user_id: int, status: RequestStatus):
+    async def update_request(self, id: int, user_id: int, status: RequestStatus) -> Response:
         request = await self.get_request(id=id, user_id=user_id)
         company = await self._get_company_by_id(id=request.company_id)
         if await self._check_permission_for_edit_status(user_id=user_id, company=company, request_data=request):
@@ -103,7 +104,7 @@ class RequestInCompanyService(BaseService):
                 await self._create_member(user_id=request.user_id, company_id=request.company_id)
                 logger.info(f"Member with id:{request.user_id} added to company with id:{request.company_id}")
             if status != 'created':
-                await self.db.execute(delete(models.Request).filter_by(id=id))
+                await self.db.execute(delete(RequestModel).filter_by(id=id))
                 await self.db.commit()
             logger.info(f"Request with id:{id} status updated and request deleted successfully! 'status':{status}")
             return Response(status_code=status_code.HTTP_204_NO_CONTENT)

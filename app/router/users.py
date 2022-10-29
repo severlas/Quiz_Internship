@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Response
 from typing import List, Optional, Union
 from app.schemas.users import User, UserUpdateRequestModel, SignUpRequestModel, UserDetail
 from app.schemas.paginations import UserPagination
 from app.services.users import UserService
 from app.services.auth import get_current_user
-from app import models
+from app.models.users import UserModel
 
 router = APIRouter(
     prefix='/users',
@@ -16,7 +16,7 @@ router = APIRouter(
 async def get_users(
         pagination: UserPagination = Depends(),
         service: UserService = Depends(),
-) -> List[models.User]:
+) -> List[UserModel]:
     return await service.get_users(pagination=pagination)
 
 
@@ -32,7 +32,7 @@ async def get_user(
 async def create_user(
         user_data: SignUpRequestModel,
         service: UserService = Depends()
-) -> models.User:
+) -> UserModel:
     return await service.create_user(user_data=user_data)
 
 
@@ -41,8 +41,8 @@ async def update_user(
         id: int,
         user_data: UserUpdateRequestModel,
         service: UserService = Depends(),
-        user: models.User = Depends(get_current_user)
-) -> models.User:
+        user: UserModel = Depends(get_current_user)
+) -> UserModel:
     return await service.update_user(id=id, user_data=user_data, user_id=user.id)
 
 
@@ -51,14 +51,14 @@ async def update_field_user(
         id: int,
         user_data: UserUpdateRequestModel,
         service: UserService = Depends(),
-        user: models.User = Depends(get_current_user)
-) -> models.User:
+        user: UserModel = Depends(get_current_user)
+) -> UserModel:
     return await service.update_user(id=id, user_data=user_data, user_id=user.id)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
         id: int, service: UserService = Depends(),
-        user: models.User = Depends(get_current_user)
-):
+        user: UserModel = Depends(get_current_user)
+) -> Response:
     return await service.delete_user(id=id, user_id=user.id)
