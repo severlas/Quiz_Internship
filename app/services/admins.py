@@ -33,7 +33,7 @@ class AdminService(BaseService):
                            f"company with id:{company_id}!"
             )
         members = await self._get_members_by_company_id(id=company_id)
-        if admin_id not in staff:
+        if admin_id not in members:
             raise NotFoundError(
                 detail=f"User with id:{admin_id} isn't included in the staff!"
             )

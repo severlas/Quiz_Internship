@@ -5,6 +5,7 @@ from app.schemas.paginations import UserPagination
 from app.services.users import UserService
 from app.services.auth import get_current_user
 from app.models.users import UserModel
+from app.router.upload_results_for_user import router as upload_results_router
 
 router = APIRouter(
     prefix='/users',
@@ -62,3 +63,5 @@ async def delete_user(
         user: UserModel = Depends(get_current_user)
 ) -> Response:
     return await service.delete_user(id=id, user_id=user.id)
+
+router.include_router(upload_results_router)

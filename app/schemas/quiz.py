@@ -57,7 +57,7 @@ class TakeQuiz(BaseModel):
     answers: List[int]
 
 
-class QuizResult(BaseMixin):
+class QuizResult(BaseModel):
     id: int
     user_id: int
     quiz_id: int
@@ -68,6 +68,7 @@ class QuizResult(BaseMixin):
     sum_all_correct_answers: int
     gpa: float
     gpa_all: float
+    created_at: datetime
 
     class Config:
         orm_mode = True
