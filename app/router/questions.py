@@ -16,25 +16,25 @@ router = APIRouter(
 
 @router.get('/')
 async def get_questions(
-        id: int,
+        company_id: int,
         quiz_id: int,
         pagination: QuizPagination = Depends(),
         service: QuestionService = Depends(),
         user: UserModel = Depends(get_current_user),
 ) -> List[QuestionModel]:
-    return await service.get_questions(id=id, quiz_id=quiz_id, user_id=user.id, pagination=pagination)
+    return await service.get_questions(company_id=company_id, quiz_id=quiz_id, user_id=user.id, pagination=pagination)
 
 
 @router.post('/', response_model=Question, status_code=status.HTTP_201_CREATED)
 async def create_question(
-        id: int,
+        company_id: int,
         quiz_id: int,
         question_data: CreateQuestion,
         user: UserModel = Depends(get_current_user),
         service: QuestionService = Depends()
 ) -> QuestionModel:
     return await service.create_question(
-        id=id,
+        company_id=company_id,
         quiz_id=quiz_id,
         question_data=question_data,
         user_id=user.id
@@ -43,7 +43,7 @@ async def create_question(
 
 @router.put('/{question_id}', response_model=Question)
 async def update_question(
-        id: int,
+        company_id: int,
         quiz_id: int,
         question_id: int,
         question_data: UpdateQuestion,
@@ -51,7 +51,7 @@ async def update_question(
         service: QuestionService = Depends()
 ) -> QuestionModel:
     return await service.update_question(
-        id=id,
+        company_id=company_id,
         quiz_id=quiz_id,
         question_id=question_id,
         question_data=question_data,
@@ -61,14 +61,14 @@ async def update_question(
 
 @router.delete('/{question_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_question(
-        id: int,
+        company_id: int,
         quiz_id: int,
         question_id: int,
         user: UserModel = Depends(get_current_user),
         service: QuestionService = Depends()
 ) -> Response:
     return await service.delete_question(
-        id=id,
+        company_id=company_id,
         quiz_id=quiz_id,
         user_id=user.id,
         question_id=question_id

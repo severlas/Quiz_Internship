@@ -36,12 +36,12 @@ class QuestionService(BaseService):
     """Get list questions"""
     async def get_questions(
             self,
-            id: int,
+            company_id: int,
             quiz_id: int,
             user_id: int,
             pagination: QuizPagination
     ) -> List[QuestionModel]:
-        members = await self._get_members_by_company_id(id)
+        members = await self._get_members_by_company_id(company_id=company_id)
         if user_id not in members:
             raise PermissionError
         questions = await self.db.execute(
@@ -55,12 +55,12 @@ class QuestionService(BaseService):
     """Create question"""
     async def create_question(
             self,
-            id: int,
+            company_id: int,
             quiz_id: int,
             user_id: int,
             question_data: CreateQuestion
     ) -> QuestionModel:
-        self._check_permission(company_id=id, user_id=user_id, quiz_id=quiz_id)
+        self._check_permission(company_id=company_id, user_id=user_id, quiz_id=quiz_id)
         question = QuestionModel(**question_data.dict(), quiz_id=quiz_id)
 
         self.db.add(question)
@@ -72,13 +72,13 @@ class QuestionService(BaseService):
     """Update question by id"""
     async def update_question(
             self,
-            id: int,
+            company_id: int,
             quiz_id: int,
             user_id: int,
             question_id: int,
             question_data: UpdateQuestion
     ) -> QuestionModel:
-        self._check_permission(company_id=id, user_id=user_id, quiz_id=quiz_id)
+        self._check_permission(company_id=company_id, user_id=user_id, quiz_id=quiz_id)
         question = self._get_question_by_id(id=question_id)
         for field, value in question_data:
             if value != None:
@@ -95,12 +95,12 @@ class QuestionService(BaseService):
     """Delete question by id"""
     async def delete_question(
             self,
-            id: int,
+            company_id: int,
             quiz_id: int,
             user_id: int,
             question_id: int,
     ) -> Response:
-        self._check_permission(company_id=id, user_id=user_id, quiz_id=quiz_id)
+        self._check_permission(company_id=company_id, user_id=user_id, quiz_id=quiz_id)
 
         await self.db.execute(delete(QuestionModel).where(QuestionModel.id == question_id))
         await self.db.commit()
