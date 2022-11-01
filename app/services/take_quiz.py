@@ -36,6 +36,45 @@ class TakeQuizService(BaseService):
         questions = questions.scalars().all()
         return questions
 
+    async def _sum_values_column(
+            self,
+            number_of_questions: int,
+            number_of_correct_answers: int,
+            quiz_results: QuizResultModel
+    ) -> dict:
+        if quiz_results:
+            sum_all_questions = quiz_results[-1].sum_all_questions + number_of_questions
+            sum_all_correct_answers = quiz_results[-1].sum_all_correct_answers + number_of_correct_answers
+
+            quiz_results_by_quiz = await self.db.execute(select(QuizResultModel).filter_by(
+                user_id=user_id, quiz_id=quiz_id
+            ))
+            quiz_results_by_quiz = quiz_results_by_quiz.scalars().all()
+            if quiz_results_by_quiz:
+                sum_questions_by_quiz = quiz_results[-1].sum_questions_by_quiz + number_of_questions
+                sum_correct_answers_by_quiz = quiz_results[-1].sum_correct_answers_by_quiz + number_of_correct_answers
+            else:
+                sum_questions_by_quiz = number_of_questions
+                sum_correct_answers_by_quiz = number_of_correct_answers
+        else:
+            sum_all_questions = number_of_questions
+            sum_all_correct_answers = number_of_correct_answers
+            sum_questions_by_quiz = number_of_questions
+            sum_correct_answers_by_quiz = number_of_correct_answers
+
+        return {
+            "sum_questions_by_quiz": sum_questions_by_quiz,
+            "sum_correct_answers_by_quiz": sum_correct_answers_by_quiz,
+            "sum_all_questions": sum_all_questions,
+            "sum_all_correct_answers": sum_all_correct_answers,
+            "gpa_by_quiz": round(sum_correct_answers_by_quiz / sum_questions_by_quiz, 3),
+            "gpa_all": round(sum_all_correct_answers / sum_all_questions, 3)
+        }
+
+    async def _add_data_to_redis(self, questions: List[QuestionModel], data: dict):
+        pass
+
+    """Take to quiz"""
     async def take_quiz(
             self,
             company_id: int,
@@ -54,43 +93,35 @@ class TakeQuizService(BaseService):
                 log_detail=f"User with id:{user_id} isn't member company with id:{company_id}"
             )
         data = {question.question_id: question.answers for question in quiz_data}
-
         redis_data = {
             question.name: [question.choice_answers[el]
                             for el in data.get(question.id)]
             for question in questions
         }
-
         await self.db_redis.set(
             f'user_id:{user_id}_company_id:{company_id}_quiz_id:{quiz_id}',
             json.dumps(redis_data),
             ex=self.EXPIRE_RESULTS
         )
-
         number_of_questions = len(questions)
         number_of_correct_answers = len([
             question for question in questions
             if question.correct_answers == data.get(question.id)
         ])
         quiz_results = await self._get_quiz_results_by_user_id(user_id=user_id)
-
-        if quiz_results:
-            sum_all_questions = quiz_results[-1].sum_all_questions + number_of_questions
-            sum_all_correct_answers = quiz_results[-1].sum_all_correct_answers + number_of_correct_answers
-        else:
-            sum_all_questions = number_of_questions
-            sum_all_correct_answers = number_of_correct_answers
-
+        sums_of_all_columns = await self._sum_values_column(
+            number_of_questions=number_of_questions,
+            number_of_correct_answers=number_of_correct_answers,
+            quiz_results=quiz_results
+        )
         quiz_result = QuizResultModel(
             quiz_id=quiz_id,
             user_id=user_id,
             company_id=company_id,
             number_of_questions=number_of_questions,
             number_of_correct_answers=number_of_correct_answers,
-            sum_all_questions=sum_all_questions,
-            sum_all_correct_answers=sum_all_correct_answers,
             gpa=round(number_of_correct_answers / number_of_questions, 3),
-            gpa_all=round(sum_all_correct_answers / sum_all_questions, 3)
+            **sums_of_all_columns
         )
 
         self.db.add(quiz_result)

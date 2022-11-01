@@ -6,6 +6,7 @@ from app.services.users import UserService
 from app.services.auth import get_current_user
 from app.models.users import UserModel
 from app.router.upload_results_for_user import router as upload_results_router
+from app.router.analytics_for_user import router as analytics_router
 
 router = APIRouter(
     prefix='/users',
@@ -65,3 +66,4 @@ async def delete_user(
     return await service.delete_user(id=id, user_id=user.id)
 
 router.include_router(upload_results_router)
+router.include_router(analytics_router)
