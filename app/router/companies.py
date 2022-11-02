@@ -11,6 +11,7 @@ from app.router.admins import router as admins_router
 from app.router.members import router as members_router
 from app.router.quiz import router as quiz_router
 from app.router.upload_results_for_company import router as upload_results_router
+from app.router.analytics_for_company import router as analytics_router
 
 router = APIRouter(
     prefix='/companies',
@@ -68,3 +69,4 @@ router.include_router(members_router)
 router.include_router(admins_router)
 router.include_router(quiz_router)
 router.include_router(upload_results_router)
+router.include_router(analytics_router)

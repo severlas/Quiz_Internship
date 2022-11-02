@@ -45,10 +45,9 @@ class UploadResultService(BaseService):
         )
 
     async def _check_permission_for_company(self, company_id: int, user_id: int) -> PermissionError:
-        company = await self._get_company_by_id(company_id)
         admins = await self._get_admins_by_company_id(company_id)
 
-        if user_id != company.owner_id and user_id is not admins:
+        if user_id not in admins:
             raise PermissionError(
                 log_detail=f"User with id:{user_id} wanted to get information about company with id:{company_id}!"
             )
@@ -111,7 +110,7 @@ class UploadResultService(BaseService):
             user_id: int,
             quiz_user_id: Optional[int] = None,
             quiz_id: Optional[int] = None
-    ):
+    ) -> List[QuizResult]:
         await self._check_permission_for_company(company_id=company_id, user_id=user_id)
 
         query = select(QuizResultModel).filter_by(company_id=company_id)
@@ -176,7 +175,7 @@ class UploadResultService(BaseService):
             company_id: Optional[int] = None,
             quiz_id: Optional[int] = None,
             filename: Optional[str] = "export"
-    ):
+    ) -> StreamingResponse:
         results = await self._get_quiz_results_for_user(
             id=id,
             user_id=user_id,
@@ -210,7 +209,7 @@ class UploadResultService(BaseService):
             company_id: Optional[int] = None,
             quiz_id: Optional[int] = None,
             filename: Optional[str] = "export"
-    ):
+    ) -> StreamingResponse:
         results = await self._get_quiz_answers_for_user(
             id=id,
             user_id=user_id,
