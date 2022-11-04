@@ -25,14 +25,14 @@ class QuizService(BaseService):
 
     """Protected check permission"""
     async def _check_permission(self, company_id, user_id) -> PermissionError:
-        admins = await self._get_admins_by_company_id(company_id)
-        company = await self._get_company_by_id(company_id)
+        admins = await self._get_admins_by_company_id(id=company_id)
+        company = await self._get_company_by_id(id=company_id)
         if user_id != company.owner_id or user_id not in admins:
             raise PermissionError
 
     """Get list quiz"""
     async def get_list_quiz(self, company_id: int, user_id: int, pagination: QuizPagination) -> List[QuizModel]:
-        members = await self._get_members_by_company_id(company_id)
+        members = await self._get_members_by_company_id(id=company_id)
         if user_id not in members:
             raise PermissionError
         quiz = await self.db.execute(
@@ -51,7 +51,7 @@ class QuizService(BaseService):
             raise NotFoundError(
                 detail=f"Quiz with id:{quiz_id} was not found in company!"
             )
-        members = await self._get_members_by_company_id(id)
+        members = await self._get_members_by_company_id(id=company_id)
         if user_id not in members:
             raise PermissionError
 
@@ -66,7 +66,7 @@ class QuizService(BaseService):
 
     """Create quiz"""
     async def create_quiz(self, company_id: int, user_id: int, quiz_data: CreateQuiz) -> QuizModel:
-        self._check_permission(company_id=id, user_id=user_id)
+        self._check_permission(company_id=company_id, user_id=user_id)
 
         quiz = QuizModel(
             **quiz_data.dict(),
@@ -88,7 +88,7 @@ class QuizService(BaseService):
             quiz_data: UpdateQuiz
     ) -> QuizModel:
         self._check_permission(company_id=company_id, user_id=user_id)
-        quiz = self._get_quiz_by_id(id=quiz_id)
+        quiz = await self._get_quiz_by_id(id=quiz_id)
 
         for field, value in quiz_data:
             if value != None:

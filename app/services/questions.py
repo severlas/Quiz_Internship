@@ -41,7 +41,7 @@ class QuestionService(BaseService):
             user_id: int,
             pagination: QuizPagination
     ) -> List[QuestionModel]:
-        members = await self._get_members_by_company_id(company_id)
+        members = await self._get_members_by_company_id(id=company_id)
         if user_id not in members:
             raise PermissionError
         questions = await self.db.execute(
