@@ -16,8 +16,9 @@ class SignUpRequestModel(BaseUser):
     password: str
 
 
-class SignInRequestModel(OAuth2PasswordRequestForm):
-    pass
+class SignInRequestModel(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class UserUpdateRequestModel(BaseModel):

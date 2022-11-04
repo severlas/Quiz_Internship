@@ -35,15 +35,3 @@ async def get_test_db() -> AsyncSession:
     BaseModel.metadata.create_all(bind=engine)
     async with TestSessionLocal() as db:
         yield db
-
-
-# @pytest.fixture()
-# async def client(get_test_db):
-#     async def test_db():
-#         try:
-#             yield get_test_db
-#         finally:
-#             await get_test_db.close()
-#     app.dependency_overrides[get_postgres_db] = test_db
-#     async with AsyncClient(app=app, base_url="http://test") as ac:
-#         yield ac

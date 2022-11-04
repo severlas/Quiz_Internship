@@ -24,3 +24,6 @@ loguru==0.6.0
 python-multipart==0.0.5
 PyJWT==2.1.0
 sqlalchemy-utils
+pytest-asyncio
+pytest-trio
+httpx

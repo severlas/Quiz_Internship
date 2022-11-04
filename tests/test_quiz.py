@@ -2,7 +2,8 @@ import pytest
 from httpx import AsyncClient
 from .database import get_test_db
 from .help_to_tests import (test_companies, client, authorized_client,
-    token, test_users, test_requests, test_quizzes, test_members_for_company, test_questions)
+    token, test_users, test_requests, test_quizzes, test_members_for_company, test_questions, test_quiz_results)
+from . import help_to_tests_data
 
 
 @pytest.mark.anyio
@@ -98,32 +99,7 @@ async def test_update_quiz(authorized_client, test_companies, test_quizzes):
 async def test_take_to_quiz(authorized_client, test_companies, test_quizzes, test_questions, test_members_for_company):
     response = await authorized_client.post(
         f'companies/{test_companies[0].id}/quiz/{test_quizzes[0].id}/take_quiz',
-        json=[
-            {
-                "question_id": test_questions[0].id,
-                "answers": [
-                    0
-                ]
-            },
-            {
-                "question_id": test_questions[1].id,
-                "answers": [
-                    0
-                ]
-            },
-            {
-                "question_id": test_questions[2].id,
-                "answers": [
-                    0
-                ]
-            },
-            {
-                "question_id": test_questions[3].id,
-                "answers": [
-                    2
-                ]
-            }
-        ]
+        json=help_to_tests_data.answers_1
     )
     assert response.status_code == 201
     assert response.json() == {
@@ -137,6 +113,39 @@ async def test_take_to_quiz(authorized_client, test_companies, test_quizzes, tes
         "sum_all_correct_answers": 2,
         "gpa": 0.5,
         "gpa_all": 0.5,
+        "created_at": response.json().get("created_at")
+
+    }
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize('anyio_backend', ['asyncio'])
+async def test_check_update_gpa(
+        authorized_client,
+        test_companies,
+        test_quizzes,
+        test_questions,
+        test_members_for_company,
+        test_quiz_results
+):
+    response = await authorized_client.post(
+        f'companies/{test_companies[0].id}/quiz/{test_quizzes[0].id}/take_quiz',
+        json=help_to_tests_data.answers_2
+    )
+    print(response.json())
+    assert response.status_code == 201
+    assert response.json() == {
+        "id": 4,
+        "user_id": 1,
+        "quiz_id": 1,
+        "company_id": 1,
+        "number_of_questions": 4,
+        "number_of_correct_answers": 4,
+        "sum_all_questions": test_quiz_results[-1].sum_all_questions + 4,
+        "sum_all_correct_answers": test_quiz_results[-1].sum_all_correct_answers + 4,
+        "gpa": round(4 / 4, 3),
+        "gpa_all": round((test_quiz_results[-1].sum_all_correct_answers + 4) /
+                         (test_quiz_results[-1].sum_all_questions + 4), 3),
         "created_at": response.json().get("created_at")
 
     }

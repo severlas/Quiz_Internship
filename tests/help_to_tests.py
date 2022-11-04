@@ -3,6 +3,7 @@ from app.main import app
 from app.database import get_postgres_db
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, delete
 from typing import List
 from app.schemas.users import UserJWT, TokenJWT
 from app.services.auth import AuthService
@@ -10,33 +11,13 @@ from app.models.companies import CompanyModel, members as MemberModel
 from app.models.users import UserModel
 from app.models.requests import RequestModel
 from app.models.quiz import QuizModel, QuestionModel
-from sqlalchemy import select, delete
+from app.models.quiz_results import QuizResultModel
+from . import help_to_tests_data
 
 
 @pytest.fixture
-async def test_users(get_test_db) -> List[UserModel]:
-    users_data = [
-        {
-            "email": "vladimir@gmail.com",
-            "username": "vladimir",
-            "password": "vladimir"
-        },
-        {
-            "email": "karina@gmail.com",
-            "username": "karina",
-            "password": "karina"
-        },
-        {
-            "email": "darya@gmail.com",
-            "username": "darya",
-            "password": "darya"
-        },
-        {
-            "email": "serhii@gmail.com",
-            "username": "serhii",
-            "password": "serhii"
-        }
-    ]
+async def test_users(get_test_db: AsyncSession) -> List[UserModel]:
+    users_data = help_to_tests_data.users_data
 
     user_map = map(lambda user: UserModel(**user), users_data)
     users = list(user_map)
@@ -48,7 +29,7 @@ async def test_users(get_test_db) -> List[UserModel]:
 
 
 @pytest.fixture()
-async def client(get_test_db) -> AsyncClient:
+async def client(get_test_db: AsyncSession) -> AsyncClient:
     async def test_db():
         try:
             yield get_test_db
@@ -76,27 +57,8 @@ async def authorized_client(client: AsyncClient, token: TokenJWT) -> AsyncClient
 
 
 @pytest.fixture
-async def test_companies(test_users: List[UserModel], get_test_db: AsyncSession):
-    companies_data = [
-        {
-            "name": "BMW",
-            "descriptions": "Inform about cars",
-            "visibility": True,
-            "owner_id": test_users[0].id,
-        },
-        {
-            "name": "Windows",
-            "descriptions": "Inform about OS",
-            "visibility": False,
-            "owner_id": test_users[1].id,
-        },
-        {
-            "name": "Meduzzen",
-            "descriptions": "Inform about web development",
-            "visibility": True,
-            "owner_id": test_users[2].id,
-        }
-    ]
+async def test_companies(test_users: List[UserModel], get_test_db: AsyncSession) -> List[CompanyModel]:
+    companies_data = help_to_tests_data.companies_data
 
     company_map = map(lambda company: CompanyModel(**company), companies_data)
     companies = list(company_map)
@@ -206,65 +168,7 @@ async def test_quizzes(
 
 @pytest.fixture
 async def test_questions(get_test_db: AsyncSession) -> List[QuestionModel]:
-    questions_data = [
-        {
-            "name": "На підприємстві в процесі виробництва утворюються особливо токсичні перероблювані "
-                    "промислові відходи. Запропонуйте методутилізації та знешкодження.",
-            "choice_answers": [
-                "Біотермічна переробка на удосконалених звалищах.",
-                "Поховання в котлованах полігонів з ізоляцією дна і стінок ущільнюючимшаром глини",
-                "Використання як сировини для повторної переробки.",
-                "Поховання в котлованах полігонів в контейнерному тарі.",
-                "Термічна обробка."
-            ],
-            "correct_answers": [
-                3
-            ],
-            "quiz_id": 1
-        },
-        {
-            "name": "Укажіть відходи, що відносяться до рідких відходів:",
-            "choice_answers": [
-                "Помиї від приготування їжі, миття посуду, підлоги, прання білизни",
-                "Нечистоти з вигребів туалетів",
-                "Господарсько-побутові стічні води",
-                "Все перераховане",
-                "Промислові, зливові, міські стічні води"
-            ],
-            "correct_answers": [
-                3
-            ],
-            "quiz_id": 1
-        },
-        {
-            "name": "Назвіть ступені забруднення ґрунту:",
-            "choice_answers": [
-                "Чистий, слабо забруднений, забруднений, сильно забруднений",
-                "Безпечний, відносно безпечний, небезпечний, надзвичайно небезпечний",
-                "Чистий, забруднений, безпечний, небезпечний",
-                "Чистий, відносно забруднення, забруднений, недостатньо забруднений",
-                "Нижче ГДК, на рівні ГДК, вище ГДК"
-            ],
-            "correct_answers": [
-                0
-            ],
-            "quiz_id": 1
-        },
-        {
-            "name": "У сільському населеному пункті з децентралізованим водопостачанням",
-            "choice_answers": [
-                "фтору",
-                "миш'яку",
-                "стронцію",
-                "свинцю",
-                "йоду"
-            ],
-            "correct_answers": [
-                2
-            ],
-            "quiz_id": 1
-        }
-    ]
+    questions_data = help_to_tests_data.questions_data
 
     question_map = map(lambda question: QuestionModel(**question), questions_data)
     questions = list(question_map)
@@ -273,3 +177,22 @@ async def test_questions(get_test_db: AsyncSession) -> List[QuestionModel]:
 
     questions = await get_test_db.execute(select(QuestionModel))
     return questions.scalars().all()
+
+
+@pytest.fixture
+async def test_quiz_results(
+        test_users: List[UserModel],
+        test_companies: List[CompanyModel],
+        test_quizzes: List[QuizModel],
+        get_test_db: AsyncSession
+) -> List[QuizModel]:
+    quiz_results_data = help_to_tests_data.quiz_results_data
+
+    quiz_result_map = map(lambda quiz_result: QuizResultModel(**quiz_result), quiz_results_data)
+    quiz_results = list(quiz_result_map)
+    get_test_db.add_all(quiz_results)
+    await get_test_db.commit()
+
+    quiz_results = await get_test_db.execute(select(QuizResultModel))
+    return quiz_results.scalars().all()
+
