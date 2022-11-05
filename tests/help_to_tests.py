@@ -7,7 +7,7 @@ from sqlalchemy import select, delete
 from typing import List
 from app.schemas.users import UserJWT, TokenJWT
 from app.services.auth import AuthService
-from app.models.companies import CompanyModel, members as MemberModel
+from app.models.companies import CompanyModel, members as MemberModel, admins as AdminModel
 from app.models.users import UserModel
 from app.models.requests import RequestModel
 from app.models.quiz import QuizModel, QuestionModel
@@ -131,6 +131,34 @@ async def test_members_for_company(
     await get_test_db.commit()
     members = await get_test_db.execute(select(MemberModel))
     return members.scalars().all()
+
+
+@pytest.fixture
+async def test_admins_for_company(
+        test_users: List[UserModel],
+        test_companies: List[CompanyModel],
+        get_test_db: AsyncSession
+) -> MemberModel:
+    admins_data = [
+        {
+            "user_id": test_users[0].id,
+            "company_id": test_companies[0].id,
+        },
+        {
+            "user_id": test_users[1].id,
+            "company_id": test_companies[1].id,
+        }
+    ]
+    admins = [
+        AdminModel.insert().values(
+            user_id=admin.get("user_id"), company_id=admin.get("company_id")
+        ) for admin in admins_data
+    ]
+
+    await get_test_db.execute(admins[0])
+    await get_test_db.commit()
+    admins = await get_test_db.execute(select(AdminModel))
+    return admins.scalars().all()
 
 
 @pytest.fixture

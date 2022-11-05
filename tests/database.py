@@ -14,14 +14,14 @@ DATABASE_URL_ASYNC = "postgresql+asyncpg://" \
                           f"{settings.database_password}@" \
                           f"{settings.database_hostname}:" \
                           f"{settings.postgres_port}/" \
-                          f"test_quiz"
+                          f"{settings.test_database_name}"
 
 DATABASE_URL = "postgresql://" \
                           f"{settings.database_username}:" \
                           f"{settings.database_password}@" \
                           f"{settings.database_hostname}:" \
                           f"{settings.postgres_port}/" \
-                          f"test_quiz"
+                          f"{settings.test_database_name}"
 
 
 async_engine = create_async_engine(DATABASE_URL_ASYNC, poolclass=NullPool)

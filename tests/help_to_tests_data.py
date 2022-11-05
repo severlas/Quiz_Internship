@@ -206,7 +206,7 @@ quiz_results_data = [
             "sum_all_correct_answers": 15,
             "gpa": round(8 / 10, 3),
             "gpa_by_quiz": round(15 / 20, 3),
-            "gpa_all": round(20 / 15, 3)
+            "gpa_all": round(15 / 20, 3)
         },
         {
             "user_id": 1,

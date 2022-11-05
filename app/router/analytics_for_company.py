@@ -15,11 +15,10 @@ router = APIRouter(
 @router.get('/get_gpa', response_model=List[AnalyticsGPAForCompany])
 async def get_gpa_all_user(
         company_id: int,
-        quiz_user_id: Optional[int] = None,
         user: UserModel = Depends(get_current_user),
         service: AnalyticsService = Depends()
 ) -> List[AnalyticsGPAForCompany]:
-    return await service.get_gpa_for_company(company_id=company_id, quiz_user_id=quiz_user_id, user_id=user.id)
+    return await service.get_gpa_for_company(company_id=company_id, user_id=user.id)
 
 
 @router.get('/get_gpa_by_quiz', response_model=List[AnalyticsGPAByQuiz])
