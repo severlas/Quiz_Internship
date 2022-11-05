@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     issuer: str
     algorithm: str
 
+    test_database_name: str
+
     class Config:
         env_file = ".env"
 

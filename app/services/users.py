@@ -81,7 +81,7 @@ class UserService(BaseService):
             raise PermissionError(
                 log_detail=f"User with id:{user_id} wanted to delete user with id:{id}!"
             )
-        await self._get_user(id)
+        await self._get_user_by_id(id=id)
         await self.db.execute(delete(UserModel).where(user_id == id))
         await self.db.commit()
         logger.info(f"User with id:{id} deleted successfully!")

@@ -40,7 +40,9 @@ class TakeQuizService(BaseService):
             self,
             number_of_questions: int,
             number_of_correct_answers: int,
-            quiz_results: QuizResultModel
+            quiz_results: QuizResultModel,
+            user_id: int,
+            quiz_id: int
     ) -> dict:
         if quiz_results:
             sum_all_questions = quiz_results[-1].sum_all_questions + number_of_questions
@@ -112,7 +114,9 @@ class TakeQuizService(BaseService):
         sums_of_all_columns = await self._sum_values_column(
             number_of_questions=number_of_questions,
             number_of_correct_answers=number_of_correct_answers,
-            quiz_results=quiz_results
+            quiz_results=quiz_results,
+            user_id=user_id,
+            quiz_id=quiz_id
         )
         quiz_result = QuizResultModel(
             quiz_id=quiz_id,

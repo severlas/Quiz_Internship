@@ -12,7 +12,7 @@ router = APIRouter(
 
 @router.post('/sign-in')
 async def sign_in(
-        user_data: SignInRequestModel = Depends(),
+        user_data: SignInRequestModel,
         service: AuthService = Depends()
 ) -> TokenJWT:
     return await service.sign_in(user_data=user_data)

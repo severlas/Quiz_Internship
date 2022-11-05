@@ -26,6 +26,13 @@ JWT_SECRET='JWT secret key'
 JWT_ALGORITHM='JWT algorithm'
 JWT_EXPIRATION='time expiration JWT'
 
+DOMAIN='auth domain'
+API_AUDIENCE='api application auth'
+ISSUER='issuer auth'
+ALGORITHM='algorithm'
+
+TEST_DATABASE_NAME='name test database'
+
 ```
 6. For make migrations run command `alembic revision --autogenarate -m "{name migrations}"`
 7. For create tables in database run command `alembic upgrade head`

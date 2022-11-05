@@ -94,7 +94,7 @@ class AuthService:
 
     """Authenticate user by email and password"""
     async def sign_in(self, user_data: SignInRequestModel) -> TokenJWT:
-        user = await self.db.execute(select(UserModel).filter_by(email=user_data.username))
+        user = await self.db.execute(select(UserModel).filter_by(email=user_data.email))
         user = user.scalar()
 
         if not user or not HashPasswordHelper.verify_password(user_data.password, user.password):
