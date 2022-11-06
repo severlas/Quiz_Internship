@@ -1,0 +1,56 @@
+name: Testing and Deploy code
+
+on: [push, pull_requests]
+
+jobs:
+  job1:
+    environment:
+      name: testing
+    env:
+      DATABASE_HOSTNAME: ${{secrets.DATABASE_HOSTNAME}}
+      DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+      DATABASE_NAME: ${{secrets.DATABASE_NAME}}
+      DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
+      POSTGRES_PORT: ${{secrets.DATABASE_PORT}}
+      POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
+      POSTGRES_DB: ${{secrets.POSTGRES_DB}}
+      APP_PORTS: ${{secrets.APP_PORTS}}
+      APP_HOST: ${{secrets.APP_HOST}}
+      REDIS_PORT: ${{secrets.REDIS_PORT}}
+      REDIS_PORTS: ${{secrets.REDIS_PORTS}}
+      REDIS_HOST: ${{secrets.REDIS_HOST}}
+      JWT_SECRET: ${{secrets.JWT_SECRET}}
+      JWT_ALGORITHM: ${{secrets.JWT_ALGORITHM}}
+      JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
+      DOMAIN: ${{secrets.DOMAIN}}
+      API_AUDIENCE: ${{secrets.API_AUDIENCE}}
+      ISSUER: ${{secrets.ISSUER}}
+      ALGORITHM: ${{secrets.ALGORITHM}}
+      TEST_DATABASE_NAME: ${{secrets.TEST_DATABASE_NAME}}
+
+    services:
+      db-postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
+          POSTGRES_DB: ${{secrets.TEST_DATABASE_NAME}}
+        ports:
+          - ${{POSTGRES_PORT}}:${{POSTGRES_PORT}}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      runs-on: ubuntu-latest
+      steps:
+        - name: Pulling git repo
+          uses: actions/checkout@v1
+        - name: Install python
+          uses: actions/setup-python@v1
+          with:
+            python-version: "3.8"
+        - name: Install all dependencies
+          run: pip install -r requirements.txt
+        - name: Test with pytest
+          run: pytest
