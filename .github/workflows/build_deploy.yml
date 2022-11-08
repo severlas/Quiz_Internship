@@ -102,6 +102,7 @@ jobs:
           echo ISSUER=${{secrets.ISSUER}} >> .env
           echo ALGORITHM=${{secrets.ALGORITHM}} >> .env
           echo TEST_DATABASE_NAME=${{secrets.TEST_DATABASE_NAME}} >> .env
+          echo TEST_DATABASE_HOSTNAME=${{secrets.TEST_DATABASE_HOSTNAME}} >> .env
 
       - name: Build the Docker image
         run: docker build -t ${{github.sha}}/${{env.EB_PACKAGES_S3_BACKET_NAME}} -f Dockerfile .
