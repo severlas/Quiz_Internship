@@ -3,7 +3,7 @@ services:
   app:
     build: .
     container_name: quiz_internship
-    command: uvicorn app.main:app --host ${APP_HOST} --reload
+    command: bash -c "alembic upgrade head && uvicorn app.main:app --host ${APP_HOST} --reload"
     env_file:
       - .env
     ports:

@@ -1,9 +1,15 @@
 name: Testing and Deploy code
+env:
+  EB_PACKAGES_S3_BACKET_NAME: "quiz-fastapi-packages"
+  EB_APPLICATION_NAME: "QuizInternship"
+  EB_ENVIRONMENT_NAME: "Quizinternship-env-1"
+  DEPLOY_PACKAGE_NAME: "fastapi_quiz_${{github.sha}}.zip"
+  AWS_REGION_NAME: "eu-west-2"
 
-on: [push, pull_requests]
+on: [push]
 
 jobs:
-  job1:
+  my_testing:
     environment:
       name: testing
     env:
@@ -11,7 +17,7 @@ jobs:
       DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
       DATABASE_NAME: ${{secrets.DATABASE_NAME}}
       DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
-      POSTGRES_PORT: ${{secrets.DATABASE_PORT}}
+      POSTGRES_PORT: ${{secrets.POSTGRES_PORT}}
       POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
       POSTGRES_DB: ${{secrets.POSTGRES_DB}}
       APP_PORTS: ${{secrets.APP_PORTS}}
@@ -35,22 +41,80 @@ jobs:
           POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
           POSTGRES_DB: ${{secrets.TEST_DATABASE_NAME}}
         ports:
-          - ${{POSTGRES_PORT}}:${{POSTGRES_PORT}}
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-      runs-on: ubuntu-latest
-      steps:
-        - name: Pulling git repo
-          uses: actions/checkout@v1
-        - name: Install python
-          uses: actions/setup-python@v1
-          with:
-            python-version: "3.8"
-        - name: Install all dependencies
-          run: pip install -r requirements.txt
-        - name: Test with pytest
-          run: pytest
+      db-redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: --entrypoint redis-server
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pulling git repo
+        uses: actions/checkout@v1
+      - name: Install python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.8"
+      - name: Install all dependencies
+        run: pip install -r requirements.txt
+      - name: Test with pytest
+        run: pytest -W ignore::RuntimeWarning
+
+  my-deploy:
+
+    runs-on: ubuntu-latest
+    needs: [my_testing]
+
+    steps:
+      - name: Pulling git repo
+        uses: actions/checkout@v1
+
+      - name: Create .env file
+        run: aws secretsmanager get-secret-value --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > .env
+      - name: Load secrets and save to .env
+        run: |
+          echo DATABASE_HOSTNAME=db-postgres >> .env
+          echo DATABASE_PASSWORD=${{secrets.DATABASE_PASSWORD}} >> .env
+          echo DATABASE_NAME=${{secrets.DATABASE_NAME}} >> .env
+          echo DATABASE_USERNAME=${{secrets.DATABASE_USERNAME}} >> .env
+          echo POSTGRES_PORT=${{secrets.POSTGRES_PORT}} >> .env
+          echo POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}} >> .env
+          echo POSTGRES_DB=${{secrets.POSTGRES_DB}} >> .env
+          echo APP_PORTS=${{secrets.APP_PORTS}} >> .env
+          echo APP_HOST=${{secrets.APP_HOST}} >> .env
+          echo REDIS_PORT=${{secrets.REDIS_PORT}} >> .env
+          echo REDIS_PORTS=${{secrets.REDIS_PORTS}} >> .env
+          echo REDIS_HOST=${{secrets.REDIS_HOST}} >> .env
+          echo JWT_SECRET=${{secrets.JWT_SECRET}} >> .env
+          echo JWT_ALGORITHM=${{secrets.JWT_ALGORITHM}} >> .env
+          echo JWT_EXPIRATION=${{secrets.JWT_EXPIRATION}} >> .env
+          echo DOMAIN=${{secrets.DOMAIN}} >> .env
+          echo API_AUDIENCE=${{secrets.API_AUDIENCE}} >> .env
+          echo ISSUER=${{secrets.ISSUER}} >> .env
+          echo ALGORITHM=${{secrets.ALGORITHM}} >> .env
+          echo TEST_DATABASE_NAME=${{secrets.TEST_DATABASE_NAME}} >> .env
+
+      - name: Build the Docker image
+        run: docker build -t ${{github.sha}}/${{env.EB_PACKAGES_S3_BACKET_NAME}} -f Dockerfile .
+
+      - name: Create ZIP Deployment Package
+        run: zip -r ${{env.DEPLOY_PACKAGE_NAME}} ./ -x *.git*
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v14
+        with:
+          aws_access_key: ${{secrets.AWS_ACCESS_KEY}}
+          aws_secret_key: ${{secrets.AWS_SECRET_KEY}}
+          application_name: ${{env.EB_APPLICATION_NAME}}
+          environment_name: ${{env.EB_ENVIRONMENT_NAME}}
+          version_label: "${{env.EB_PACKAGES_S3_BACKET_NAME}}-ver-${{github.sha}}"
+          region: ${{env.AWS_REGION_NAME}}
+          deployment_package: ${{env.DEPLOY_PACKAGE_NAME}}

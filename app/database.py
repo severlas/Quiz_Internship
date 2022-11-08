@@ -28,3 +28,11 @@ async def get_postgres_db() -> AsyncSession:
 async def get_redis_db() -> AsyncIterator[Redis]:
         async with Redis.from_url(settings.redis_host, decode_responses=True) as db_redis:
             yield db_redis
+
+
+DATABASE_URL_SYNC = "postgresql://" \
+                          f"{settings.database_username}:" \
+                          f"{settings.database_password}@" \
+                          f"{settings.database_hostname}:" \
+                          f"{settings.postgres_port}/" \
+                          f"{settings.database_name}"
