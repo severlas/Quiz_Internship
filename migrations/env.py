@@ -7,7 +7,7 @@ from alembic import context
 # sys.path = ['', '..'] + sys.path[1:]
 
 from app.models import BaseModel
-from app.database import DATABASE_URL_LOCAL
+from app.database import DATABASE_URL_SYNC
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -56,7 +56,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration['sqlalchemy.url'] = DATABASE_URL_LOCAL
+    configuration['sqlalchemy.url'] = DATABASE_URL_SYNC
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

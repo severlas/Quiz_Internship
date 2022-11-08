@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     algorithm: str
 
     test_database_name: str
+    test_database_hostname: str
 
     class Config:
         env_file = ".env"

@@ -12,14 +12,14 @@ from app.settings import settings
 DATABASE_URL_ASYNC = "postgresql+asyncpg://" \
                           f"{settings.database_username}:" \
                           f"{settings.database_password}@" \
-                          f"{settings.database_hostname}:" \
+                          f"{settings.test_database_hostname}:" \
                           f"{settings.postgres_port}/" \
                           f"{settings.test_database_name}"
 
 DATABASE_URL = "postgresql://" \
                           f"{settings.database_username}:" \
                           f"{settings.database_password}@" \
-                          f"{settings.database_hostname}:" \
+                          f"{settings.test_database_hostname}:" \
                           f"{settings.postgres_port}/" \
                           f"{settings.test_database_name}"
 
