@@ -33,6 +33,7 @@ jobs:
       ISSUER: ${{secrets.ISSUER}}
       ALGORITHM: ${{secrets.ALGORITHM}}
       TEST_DATABASE_NAME: ${{secrets.TEST_DATABASE_NAME}}
+      TEST_DATABASE_HOSTNAME: ${{secrets.TEST_DATABASE_HOSTNAME}}
 
     services:
       db-postgres:
@@ -81,7 +82,7 @@ jobs:
         run: aws secretsmanager get-secret-value --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > .env
       - name: Load secrets and save to .env
         run: |
-          echo DATABASE_HOSTNAME=db-postgres >> .env
+          echo DATABASE_HOSTNAME=${{secrets.DATABASE_HOSTNAME}} >> .env
           echo DATABASE_PASSWORD=${{secrets.DATABASE_PASSWORD}} >> .env
           echo DATABASE_NAME=${{secrets.DATABASE_NAME}} >> .env
           echo DATABASE_USERNAME=${{secrets.DATABASE_USERNAME}} >> .env
