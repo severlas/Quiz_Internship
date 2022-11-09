@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     email_host_password: str
     email_port: int
 
+
     class Config:
         env_file = ".env"
 
