@@ -1,0 +1,39 @@
+version: "3"
+services:
+  app:
+    build: .
+    container_name: quiz_internship
+    command: bash -c "alembic upgrade head && uvicorn app.main:app --host ${APP_HOST} --reload"
+    env_file:
+      - .env
+    ports:
+      - ${APP_PORTS}
+    volumes:
+      - ./:/app
+    depends_on:
+      - db-postgres
+      - db-redis
+
+  db-postgres:
+    image: postgres:14.0
+    container_name: db-postgres
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+
+  db-redis:
+    image: redis
+    container_name: db-redis
+    env_file:
+      - .env
+    ports:
+      - ${REDIS_PORTS}
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-db:
+  redis-data:
