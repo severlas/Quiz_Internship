@@ -32,6 +32,12 @@ ISSUER='issuer auth'
 ALGORITHM='algorithm'
 
 TEST_DATABASE_NAME='name test database'
+TEST_DATABASE_HOSTNAME='host test database'
+
+EMAIL_HOST='email host'
+EMAIL_HOST_SENDER='email sender'
+EMAIL_HOST_PASSWORD='email password'
+EMAIL_PORT='email port'
 
 ```
 6. For make migrations run command `alembic revision --autogenarate -m "{name migrations}"`
